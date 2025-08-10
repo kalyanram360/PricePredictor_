@@ -157,7 +157,8 @@ def buffer_stock(request):
     commodities = BufferStock.objects.all()  # Fetch all commodities
 
     # Load the dataset from Excel
-    df = pd.read_excel(r"C:\Users\KALYAN\OneDrive\Desktop\september_dataset.xlsx")
+    excel_path = os.path.join(BASE_DIR, 'september_dataset.xlsx')
+    df = pd.read_excel(excel_path)
 
     high_price_commodities = []
     for commodity in commodities:
@@ -274,11 +275,18 @@ import pandas as pd
 import joblib
 
 # Load the saved models and encoders
-xgboost_model = joblib.load(r'C:\Users\KALYAN\OneDrive\Desktop\pricepredictor\pricepredictor\price\templates\X.pkl')  # XGBoost model
-lr_model = joblib.load(r'C:\Users\KALYAN\OneDrive\Desktop\pricepredictor\pricepredictor\price\templates\l.pkl')       # Linear Regression model
-state_encoder = joblib.load(r'C:\Users\KALYAN\OneDrive\Desktop\pricepredictor\pricepredictor\price\templates\state.pkl')
-commodity_encoder = joblib.load(r'C:\Users\KALYAN\OneDrive\Desktop\pricepredictor\pricepredictor\price\templates\commodity.pkl')
-season_encoder = joblib.load(r'C:\Users\KALYAN\OneDrive\Desktop\pricepredictor\pricepredictor\price\templates\season.pkl')
+import os
+from django.conf import settings
+
+# Get the base directory of the Django project
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'price', 'templates')
+
+xgboost_model = joblib.load(os.path.join(TEMPLATES_DIR, 'X.pkl'))  # XGBoost model
+lr_model = joblib.load(os.path.join(TEMPLATES_DIR, 'l.pkl'))       # Linear Regression model
+state_encoder = joblib.load(os.path.join(TEMPLATES_DIR, 'state.pkl'))
+commodity_encoder = joblib.load(os.path.join(TEMPLATES_DIR, 'commodity.pkl'))
+season_encoder = joblib.load(os.path.join(TEMPLATES_DIR, 'season.pkl'))
 
 # Function to predict the price using models
 def getPrice_from_model(commodity, season, production, state):
@@ -431,7 +439,8 @@ def graphs_plot(request):
 
         # Example Python code to process the options
         # Load and process the Excel data
-        d = pd.read_excel(r"C:\Users\KALYAN\OneDrive\Desktop\september_dataset.xlsx")
+        excel_path = os.path.join(BASE_DIR, 'september_dataset.xlsx')
+        d = pd.read_excel(excel_path)
 
         df = pd.DataFrame(d)
 

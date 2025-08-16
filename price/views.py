@@ -428,83 +428,110 @@ import matplotlib.pyplot as mpl
 from io import BytesIO
 import base64
 import mplcursors  # For hover tooltips
-from matplotlib import style
+# from matplotlib import style
+# def graphs_plot(request):
+#     graph_url = None
+
+#     if request.method == 'POST':
+#         # Get the selected state and commodity from the form
+#         state = request.POST.get('state')
+#         commodity = request.POST.get('commodity')
+
+#         # Example Python code to process the options
+#         # Load and process the Excel data
+#         excel_path = os.path.join(BASE_DIR, 'september_dataset.xlsx')
+#         d = pd.read_excel(excel_path)
+
+#         df = pd.DataFrame(d)
+
+#         # Filter the DataFrame based on the selected state and commodity
+#         indices = df[(df['State'] == state) & (df['Commodity'] == commodity)].index
+
+#         if indices.empty:
+#             return render(request, 'newgraphs.html', {'error': f'No data found for {commodity} in {state}.'})
+
+#         if not indices.empty:
+#             start = int(indices[0])
+#             end = int(indices[-1])
+#             xval = []
+#             yval = []
+
+#             while start <= end:
+#                 yval.append(int(df['Price'].iloc[start]))
+#                 xval.append(str(df['Year'].iloc[start]) + "-" + str(df['Season'].iloc[start]))
+#                 start += 1
+
+#             # Generate the graph
+#             fig, ax = mpl.subplots(figsize=(6, 6))
+#             mpl.style.use('Solarize_Light2')
+#             ax.grid(True)
+#             ax.plot(xval, yval, marker="o", mec="r", mfc="b", ls="solid", lw=2, label=f"{commodity} Prices in {state}")
+
+#             ax.set_xlabel("Year-Season")
+#             ax.set_ylabel("Price")
+#             ax.set_title(f"{commodity} Prices in {state}")
+#             ax.legend()
+
+#             # Rotate x-axis labels for better readability
+#             ax.set_xticks(range(len(xval)))
+#             ax.set_xticklabels(xval, rotation=45, ha="right")
+
+#             # Tight layout to prevent label overlapping
+#             fig.tight_layout()
+
+#             # Add hover tooltips for x and y values using mplcursors
+#             '''mplcursors.cursor(hover=True).connect("add", lambda sel: sel.annotation.set_text(
+#                 f"Year-Season: {xval[sel.target.index]}\nPrice: {yval[sel.target.index]}"))'''
+
+#             # Save the plot to a BytesIO object and convert it to base64 for embedding in HTML
+#             buf = BytesIO()
+#             mpl.savefig(buf, format='png')
+#             buf.seek(0)
+#             image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+#             graph_url = 'data:image/png;base64,' + image_base64
+
+#     return render(request, 'newgraphs.html', {'graph_url': graph_url})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# #graph code end 
+
+import requests
+from django.shortcuts import render
+
 def graphs_plot(request):
     graph_url = None
+    error = None
 
     if request.method == 'POST':
-        # Get the selected state and commodity from the form
         state = request.POST.get('state')
         commodity = request.POST.get('commodity')
 
-        # Example Python code to process the options
-        # Load and process the Excel data
-        excel_path = os.path.join(BASE_DIR, 'september_dataset.xlsx')
-        d = pd.read_excel(excel_path)
+        try:
+            response = requests.get(
+                "http://127.0.0.1:8000/plot",
+                params={"state": state, "commodity": commodity},
+                timeout=10
+            )
+            if response.status_code == 200:
+                data = response.json()
+                graph_url = data.get("graph_url")
+            else:
+                error = response.json().get("error", "Something went wrong")
+        except Exception as e:
+            error = str(e)
 
-        df = pd.DataFrame(d)
-
-        # Filter the DataFrame based on the selected state and commodity
-        indices = df[(df['State'] == state) & (df['Commodity'] == commodity)].index
-
-        if indices.empty:
-            return render(request, 'newgraphs.html', {'error': f'No data found for {commodity} in {state}.'})
-
-        if not indices.empty:
-            start = int(indices[0])
-            end = int(indices[-1])
-            xval = []
-            yval = []
-
-            while start <= end:
-                yval.append(int(df['Price'].iloc[start]))
-                xval.append(str(df['Year'].iloc[start]) + "-" + str(df['Season'].iloc[start]))
-                start += 1
-
-            # Generate the graph
-            fig, ax = mpl.subplots(figsize=(6, 6))
-            mpl.style.use('Solarize_Light2')
-            ax.grid(True)
-            ax.plot(xval, yval, marker="o", mec="r", mfc="b", ls="solid", lw=2, label=f"{commodity} Prices in {state}")
-
-            ax.set_xlabel("Year-Season")
-            ax.set_ylabel("Price")
-            ax.set_title(f"{commodity} Prices in {state}")
-            ax.legend()
-
-            # Rotate x-axis labels for better readability
-            ax.set_xticks(range(len(xval)))
-            ax.set_xticklabels(xval, rotation=45, ha="right")
-
-            # Tight layout to prevent label overlapping
-            fig.tight_layout()
-
-            # Add hover tooltips for x and y values using mplcursors
-            '''mplcursors.cursor(hover=True).connect("add", lambda sel: sel.annotation.set_text(
-                f"Year-Season: {xval[sel.target.index]}\nPrice: {yval[sel.target.index]}"))'''
-
-            # Save the plot to a BytesIO object and convert it to base64 for embedding in HTML
-            buf = BytesIO()
-            mpl.savefig(buf, format='png')
-            buf.seek(0)
-            image_base64 = base64.b64encode(buf.read()).decode('utf-8')
-            graph_url = 'data:image/png;base64,' + image_base64
-
-    return render(request, 'newgraphs.html', {'graph_url': graph_url})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#graph code end 
+    return render(request, 'newgraphs.html', {'graph_url': graph_url, 'error': error})
